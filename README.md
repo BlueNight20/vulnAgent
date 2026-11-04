@@ -1,243 +1,380 @@
+<div align="center">
+
 # VulnAgent
 
-授权靶机测试管理平台，完整代码实现与本地交付核验已完成；真实靶机实测由用户负责。逐项证据见 [最终交付核验](docs/FINAL_DELIVERY_AUDIT.md)。
+**自主渗透测试智能体平台**
 
-当前按用户明确的单人自用需求交付，不以账号登录和多用户隔离作为前置条件。SQLite 仍为已验证后端；PostgreSQL 是否引入按并发写入、图关系查询和部署成本评估，不因单用户就认定无价值，也不在咨询选型时自动迁移。
+多智能体协作 · 攻击链推理 · 证据驱动 · 全自动执行
 
-首次配置、任务操作、验收结果和故障反馈见 [单人使用与靶机验收](docs/USER_ACCEPTANCE.md)。执行引擎默认关闭，须在设置页开启并保存；关闭会暂停运行任务，重新开启后须手动恢复。模型连接测试和 MCP 健康检查仍可显式执行。控制边界与验证见 [执行引擎开关](docs/RUNTIME_CONTROL.md)。
+[![NestJS](https://img.shields.io/badge/NestJS-11.2.8-E0234E?logo=nestjs)](https://nestjs.com)
+[![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript)](https://www.typescriptlang.org)
+[![SQLite](https://img.shields.io/badge/SQLite-better--sqlite3-003B57?logo=sqlite)](https://www.sqlite.org)
 
-引擎与任务中心共用持久化控制队列，控制 POST 返回 TaskSummary 表示请求接受，实际快照从 GET 获取。终态任务须先重新运行；暂停、等待输入及停滞使用恢复，保留原预算。接口、回滚及中断语义见 [引擎控制说明](docs/ENGINE_CONTROLS.md)。
+</div>
 
-日志级别与文件开关保存后即时生效，文件默认追加到 API 工作目录的 storage/logs/vulnagent.jsonl，目录可由 LOG_DIR 配置。设置页显示实际输出状态，故障及保留边界见 [运行日志说明](docs/LOGGING.md)。
-
-新任务读取保存的真实模型及默认预算/Worker 数量，填写期间保留草稿；系统全局 Worker 上限与任务自身上限共同约束派发。等待不消耗重试或无进展轮次，时间预算仍执行；详见 [Worker 并发与默认值](docs/WORKER_CAPACITY.md)。
-
-人工提示可指定当前会话或后续任务规划；定向提示不会被其他 Worker / Planner 读取，实际接收后才消费。暂停、重启和未确认模型用量的边界见 [提示投递说明](docs/HINT_DELIVERY.md)。工作流按意图的真实来源会话连线，不将多轮规划都归给最早 Planner。
-
-> VulnAgent 面向**已授权的 VulnHub 实验环境**。目前已接入真实工具执行、编排和文本证据管理。
->
-> **全自动模式**：工具调用一律无需人工审批，由模型自行选择侦察、利用与验证工具，不限制工具能力；仅保留两条授权边界——引擎开关（系统设置）与目标授权范围（scope-guard）。事实冲突由引擎按证据强度自动裁决，漏洞评级/CVE/CWE 的人工维护入口已移除。
-> 下方部分内容保留第一阶段说明；最新进度与验收限制以 [持续实现记录](docs/IMPLEMENTATION_STATUS.md) 为准。
-
-SQLite 默认关闭自动改表，支持新库建表、匹配旧库接管与迁移前备份，参见 [迁移说明](apps/api/src/database/migrations/README.md)。
-
-SQLite 一致性备份、校验、新路径恢复和按数量轮换已提供 CLI，见 [备份恢复说明](docs/BACKUP_RECOVERY.md)。轮换默认只生成新备份并预览旧包清理，显式 --apply 才执行。设置页已提供手工数据保留及父任务缺失记录维护：先预览、再备份并原子清理，保留审计和防重建 ID；不安装定时任务，见 [数据维护说明](docs/DATA_MAINTENANCE.md)。
-
-新增隔离验证命令：`npm run test:execution`（执行与审批恢复）、`npm run test:migrations`（迁移、CLI 与完整应用启动）。两者均不访问真实靶机。
-
-漏洞发现页已支持候选、独立验证队列、历史和证据跳转，以及有原文依据的描述、评级、CVE/CWE、CVSS 和修复建议维护。修改保留前后字段并检查版本冲突，不改变独立验证结论；证据失效后页面和新报告不再采用相应评级及编号。操作与 API 见 [漏洞维护说明](docs/FINDING_ASSESSMENTS.md)。`npm run test:findings` 与 `npm run test:finding-assessments` 验证数据闭环；真实模型与靶机准确率仍待验收。
-
-Linux 审计与独立验证档案已核对命令工具和审批角色；启动时过滤目录及角色权限，显式拒绝优先，审批后仍重查最新范围与权限。`npm run test:profile-permissions` 验证固定协议下的审批、新调用与独立证据路径；实际远程访问及靶机权限效果不由该协议测试证明，见 [档案权限说明](docs/PROFILE_PERMISSIONS.md)。
-
-权限页支持精确工具、自定义模式及审批要求；权限修改和含原值的审计同事务，提交后才推送结果。第十条迁移约束全局规则唯一，并保留历史重复规则的完整审计、维持原有拒绝语义。`npm run test:permission-updates` 覆盖并发、审计/提交失败及通知时序，见 [权限维护说明](docs/PERMISSION_UPDATES.md)。
+> [!WARNING]
+> **仅限授权测试环境使用。** 本项目面向已获得书面授权的靶场（如 VulnHub）与自有资产。
+> 系统不内置任何攻击载荷，通过外部 MCP 工具集执行操作；所有工具调用受目标授权范围约束。
+> 使用者须自行确保对目标具有合法授权，并承担由此产生的全部责任。
 
 ---
 
-## 1. 当前阶段范围
+## 这是什么
 
-| 模块 | 状态 |
-| --- | --- |
-| 5 份设计文档（`docs/`） | 已完成 |
-| NestJS 后端 + SQLite（31 张表） | 已接入 10 条显式迁移 |
-| 任务中心（创建/暂停/恢复/停止/重跑） | 已完成 |
-| 仪表盘（真实聚合 + 服务真实状态） | 已完成 |
-| MCP 管理（真实连接检测 + 工具目录） | 已完成 |
-| 工作流（React Flow） | 已接入真实运行记录 |
-| 智能体、攻击面、漏洞、证据、设置 | 已接入业务接口 |
-| 报告中心 | 已接入快照、Markdown / 中文 PDF、JSON / ZIP 文本和二进制证据包 |
-| Orchestrator / Pi Agent 执行引擎 | 代码已接入，靶机实测由用户负责 |
-| MCP Policy Proxy 运行时拦截 | 已接入引擎开关、授权范围与参数校验；工具审批已取消 |
-| 后端框架与连接 | Nest 11 / Express 5；已验证 HTTP、WebSocket 和隔离 npm ci 后的运行时 |
-| 模型 / Worker Token 预算 | 请求前预留、实际结算、未确认占用和本轮 / 历史账本 |
+VulnAgent 不是"一键扫描器"。它把一个渗透测试专家的**思考过程**变成了可执行的系统：
 
-## 2. 环境要求
+- **Planner** 决定下一步做什么（在哪里卡住、缺哪条信息、哪条线索还没利用）
+- **Worker** 执行具体动作（侦察 / Web / 服务 / 分析 / 独立验证）
+- **黑板** 沉淀事实、假设、线索与证据，供下一轮决策复用
+- **证据链** 保证每个结论都能回溯到原始工具输出
 
-- Windows 10/11（PowerShell 7 或 Windows PowerShell 5.1）
-- Node.js ^22.22.3 / ^24.15.0 / ≥26（当前验证 v24.21.0；与 CLI 配套工具链引擎约束一致）
-- npm ≥ 10（已验证 11.19.0）
-- 可选：Docker 中已部署的 blhackbox（MCP Gateway `http://localhost:8080/mcp`）
+与传统自动化扫描的区别在于**收敛性**：系统会识别死路、跳过重复枚举、把失败转化为知识，而不是无限扩大扫描范围。
 
-## 3. 安装依赖
+---
 
-```powershell
-cd C:\Users\20396\Desktop\11
+## 架构
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          Browser  (React 18 + Vite)                     │
+│   TanStack Query（服务端状态） · Zustand（本地状态） · React Flow（拓扑） │
+└──────────────────────────┬───────────────────────────┬──────────────────┘
+                    REST /api/*                  WebSocket /ws
+┌──────────────────────────▼───────────────────────────▼──────────────────┐
+│                        apps/api  (NestJS 11)                            │
+│                                                                         │
+│   ┌──────────────────────────────────────────────────────────────────┐  │
+│   │                    Orchestrator  编排循环                        │  │
+│   │   验收判定 → 预算检查 → 规划 → 准入 → 评分 → 派发                │  │
+│   └────────────┬─────────────────────────────────────┬───────────────┘  │
+│                │                                     │                  │
+│         ┌──────▼──────┐                       ┌──────▼──────┐           │
+│         │  Planner    │─── 产出意图 ────────▶ │   Worker    │           │
+│         │  (单会话)   │                       │ (多并发)    │           │
+│         └─────────────┘                       └──────┬──────┘           │
+│                ▲                                     │                  │
+│                │              ┌──────────────────────▼───────────────┐  │
+│         ┌──────┴──────┐       │        Tool Layer / MCP Proxy        │  │
+│         │ Blackboard  │◀──────│  runtime-gate → 拦截规则 → 范围校验  │  │
+│         │ 黑板        │       │  参数校验 · 调用记录 · 证据落库       │  │
+│         │ 事实/假设   │       └──────────────────┬───────────────────┘  │
+│         │ 线索/证据   │                          │                      │
+│         └──────┬──────┘                          │                      │
+│                │                                 │                      │
+│   ┌────────────▼─────────────┐                   │                      │
+│   │  独立验证队列            │                   │                      │
+│   │  候选 → 复核 → 确认/排除 │                   │                      │
+│   └──────────────────────────┘                   │                      │
+│                                                  │                      │
+│   Model Gateway（预算预留/结算）  ·  SQLite 32 表 ·  审计 ·  事件       │
+└──────────────────────────────────────────────────┼──────────────────────┘
+                                                   │ Streamable HTTP (MCP)
+                                    ┌──────────────▼───────────────┐
+                                    │  blhackbox MCP Gateway/Servers│
+                                    │  kali · hexstrike · boaz ...  │
+                                    │  （外部部署，本项目不修改）    │
+                                    └──────────────────────────────┘
+```
+
+### 核心设计
+
+| 机制 | 说明 |
+|---|---|
+| **攻击链推理** | 按 `侦察 → 服务识别 → 入口点 → 立足点 → 横向 → 提权 → 目标验证` 定位当前位置，只补齐通往下一阶段所缺的信息 |
+| **死路识别** | 同一方向多次目标侧失败即标注为死路；工具缺失/越权等环境性失败不计入，避免误判 |
+| **线索复用** | 主动追踪"已发现但未被利用"的凭据、路径、版本，避免停在原始发现上 |
+| **意图去重** | 服务端生成稳定身份键（不含标题措辞），重复意图直接拒绝 |
+| **验证隔离** | 验证会话不能产出新候选，切断"验证→新候选→再验证"的自我繁殖 |
+| **线索分级** | `actionable`（可利用）/ `weakness`（加固建议）/ `non-finding`（否定性观测，不构成漏洞） |
+| **全自动执行** | 工具调用无需人工审批；仅保留引擎开关与授权范围两条边界 |
+
+---
+
+## 快速开始
+
+### 环境要求
+
+| 依赖 | 版本 | 必需 |
+|---|---|---|
+| Node.js | `^22.22.3` \| `^24.15.0` \| `>=26` | ✅ |
+| npm | `>= 10` | ✅ |
+| Docker + blhackbox | 最新 | ⚠️ 执行真实测试时必需 |
+
+### 1. 安装
+
+```bash
+git clone https://github.com/BlueNight20/vulnAgent.git
+cd vulnAgent
 npm install
 ```
 
-> **重要（已踩坑，请务必阅读）**
+> [!IMPORTANT]
+> 本项目使用 **npm workspaces**，不要用 pnpm 安装（部分环境的 junction 安全策略会导致失败）。
+> 首次安装如遇原生模块脚本被拦截，需显式批准：
 >
-> 1. 本项目使用 **npm workspaces** 而非 pnpm 安装依赖。
->    原因：本机安全策略会拒绝遍历 pnpm 创建的 junction（`os error 448 不受信任的装入点`），
->    pnpm 12 即使配置 `node-linker=hoisted` 仍会为 workspace 依赖创建 junction。
->    若你的环境没有该限制，也可以使用 pnpm（`pnpm-workspace.yaml` 已保留）。
-> 2. `packages/shared` 通过 `file:../../packages/shared` 引用，依赖其 `dist/` 下的 CJS 产物。
->    因此**后端启动前必须先构建 shared 包**（`npm run dev:api` 与 `npm run build` 已自动执行）。
-> 3. 若 `better-sqlite3` 报 `Cannot find module 'bindings'`，说明传递依赖未正确落盘，执行
->    `npm install bindings --workspace @vulnagent/api` 修复。
+> ```bash
+> npm install-scripts approve better-sqlite3 esbuild @nestjs/core
+> ```
 
-首次安装时，npm 可能会拦截原生模块的安装脚本，需要批准（否则 SQLite 无法加载）：
+### 2. 配置
 
-```powershell
-npm install-scripts approve better-sqlite3
-npm install-scripts approve esbuild
-npm install-scripts approve @nestjs/core
+```bash
+# Linux / macOS
+cp .env.example .env
+
+# Windows PowerShell
+Copy-Item .env.example .env
 ```
 
-## 4. 配置环境变量
+生成加密主密钥并填入 `VA_ENCRYPTION_KEY`：
 
-```powershell
-Copy-Item .env.example .env
-# 生成 32 字节 AES-256-GCM 主密钥并写入 VA_ENCRYPTION_KEY
+```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-关键变量：
+> [!CAUTION]
+> `VA_ENCRYPTION_KEY` 用于 AES-256-GCM 加密模型 API Key 与 MCP 请求头。
+> **丢失后无法解密已有数据**，请单独妥善备份。不要将 `.env` 提交到版本库（已在 `.gitignore` 中）。
 
-| 变量 | 说明 | 默认 |
-| --- | --- | --- |
-| `PORT` | 后端端口 | `3001` |
-| `DB_PATH` | SQLite 文件路径 | `./storage/vulnagent.sqlite` |
-| `VA_ENCRYPTION_KEY` | 密钥加密主密钥（规范 base64，32 字节），优先于文件 | 空 |
-| `VA_API_HOST` | API 监听地址；远端部署须显式配置并配套访问控制 | `127.0.0.1` |
-| `VA_ENCRYPTION_KEY_FILE` | 持久化主密钥文件，相对 API 工作目录 | SQLite 默认 `DB_PATH.key`；其他数据库须显式配置 |
-| `MCP_GATEWAY_URL` | blhackbox MCP Gateway 地址 | `http://localhost:8080/mcp` |
-| `MODEL_BASE_URL` / `MODEL_NAME` | OpenAI 兼容模型端点 | `https://api.deepseek.com/v1` / `deepseek-chat` |
-| `WORKER_MAX_CONCURRENCY` | Worker 并发上限 | `2` |
-| `MODEL_MAX_CONCURRENCY` | 模型请求并发上限 | `2` |
-| `PI_RUNTIME_ENABLED` | 未保存数据库设置时的执行开关；数据库设置优先 | `false` |
+### 3. 启动
 
-## 5. 启动
+**方式一：一键启动**
 
-**方式一：一键启动（推荐）**
+```bash
+# Windows PowerShell
+pwsh -File scripts/start.ps1 -SkipInstall
 
-```powershell
-pwsh -File scripts\start.ps1
+# 或跨平台
+npm run dev
 ```
 
-**方式二：手动分别启动（两个终端）**
+**方式二：分别启动（两个终端）**
 
-```powershell
-# 终端 1 - 后端（首次会先编译 shared 包）
-npm run dev:api
-
-# 终端 2 - 前端
-npm run dev:web
+```bash
+npm run dev:api    # 后端 :3001
+npm run dev:web    # 前端 :5173
 ```
-
-启动后访问：
 
 | 服务 | 地址 |
-| --- | --- |
+|---|---|
 | 前端控制台 | http://localhost:5173 |
 | 后端 API | http://localhost:3001/api |
 | 健康检查 | http://localhost:3001/api/health |
 | WebSocket | ws://localhost:3001/ws |
 
-前端通过 Vite 代理把 `/api`、`/ws` 转发到后端，无需额外配置 CORS。
+### 4. 首次使用
 
-## 6. 页面路由
+启动后按顺序完成三件事，否则任务无法运行：
 
-| 路由 | 页面 | 状态 |
-| --- | --- | --- |
-| `/dashboard` | 仪表盘 | 已实现 |
-| `/tasks` | 任务中心 | 已实现 |
-| `/workflow` | 工作流 | 已实现（运行记录） |
-| `/mcp` | MCP 管理 | 已实现（真实检测） |
-| `/agents` | 智能体工作台 | 已实现 |
-| `/attack-surface` | 攻击面分析 | 已实现（来源证据与信息缺口） |
-| `/vulnerabilities` | 漏洞发现 | 已实现（候选与独立验证历史） |
-| `/evidence` | 证据管理 | 已实现（文本与完整性校验） |
-| `/reports` | 报告中心 | 占位 |
-| `/settings` | 系统设置 | 已实现 |
+1. **连接 MCP 工具集** — 到「MCP 管理」页检测连接，确认工具目录非空
+   ```bash
+   # blhackbox 目录中执行
+   docker compose up -d
+   ```
+2. **填写模型密钥** — 到「系统设置」页填写 OpenAI 兼容模型 API Key（加密入库，前端只回显掩码）
+3. **开启执行引擎** — 引擎默认关闭，须在设置页开启并保存
 
-## 7. 测试与校验
+---
 
-```powershell
-# 类型检查（shared + api + web）
-npm run typecheck
-
-# 单元测试（后端状态/证据规则、前端工具与页面交互）
-npm run test
-
-# 冒烟测试（需后端已启动）
-pwsh -File scripts\smoke.ps1
-```
-
-## 8. 目录结构
+## 目录结构
 
 ```
-.
+vulnAgent/
 ├─ apps/
-│  ├─ api/                 NestJS 后端
+│  ├─ api/                        NestJS 后端
 │  │  └─ src/
-│  │     ├─ config/        环境变量校验与配置
-│  │     ├─ common/        异常过滤器、加密、分页
-│  │     ├─ database/      TypeORM 实体（30 张表）
-│  │     └─ modules/       tasks / dashboard / mcp / settings / workflow / audit / events / health
-│  └─ web/                 React 前端
+│  │     ├─ config/               环境校验与配置
+│  │     ├─ common/               加密、异常过滤、分页工具
+│  │     ├─ database/
+│  │     │  ├─ entities/          32 张业务表（TypeORM）
+│  │     │  └─ migrations/        14 条显式迁移
+│  │     └─ modules/
+│  │        ├─ orchestrator/      ★ 编排核心：循环、评分、准入、调度
+│  │        │  ├─ kill-chain.ts         攻击链阶段推断 / 死路 / 线索
+│  │        │  ├─ intent-identity.ts    意图稳定身份键
+│  │        │  ├─ planner-capacity.ts   规划批量与队列压缩
+│  │        │  ├─ tool-recovery.ts      工具失败替代策略
+│  │        │  └─ planner-runner / worker-runner / worker-scheduler
+│  │        ├─ blackboard/        ★ 黑板：事实、假设、意图、证据、漏洞
+│  │        ├─ tool/              ★ 工具层：Invoker、Hook 链、拦截规则
+│  │        ├─ mcp/               MCP 连接、目录、健康检查、Scope
+│  │        ├─ pi-runtime/        Agent 会话运行时
+│  │        ├─ model-gateway/     模型调用与 Token 预算
+│  │        ├─ worker-skills/     角色档案与提示词构建
+│  │        ├─ tasks/             任务生命周期
+│  │        ├─ reports/           报告快照与导出
+│  │        └─ dashboard/ workflow/ settings/ audit/ events/ health/
+│  │
+│  └─ web/                        React 前端
 │     └─ src/
-│        ├─ components/    ui 基础组件、布局、业务组件
-│        ├─ pages/         10 个页面
-│        ├─ api/           REST 客户端
-│        ├─ hooks/         数据查询与 WebSocket
-│        ├─ stores/        Zustand
-│        ├─ mock/          工作流 Mock 数据（独立模块）
-│        └─ lib/           工具函数与导航配置
-├─ packages/shared/        前后端共享枚举、类型、常量、校验
-├─ docs/                   PRD / ARCHITECTURE / DATABASE / API / DEVELOPMENT_PLAN
-└─ scripts/                dev.mjs / start.ps1 / smoke.ps1
+│        ├─ pages/                15 个页面
+│        ├─ components/           UI 基础组件 / 布局 / 业务面板
+│        ├─ features/workflow/    React Flow 执行拓扑
+│        ├─ api/                  REST 客户端
+│        └─ hooks/ stores/ lib/
+│
+├─ packages/
+│  └─ shared/                     前后端共享枚举、类型、常量
+│
+├─ docs/                          设计与验收文档
+├─ scripts/                       启动脚本与 30+ 隔离验证脚本
+└─ .env.example                   环境变量模板
 ```
 
-## 9. 连接 blhackbox
+---
 
-本项目**不修改** blhackbox 及其 Docker Compose 项目，只通过 MCP 协议（官方 TypeScript SDK，
-Streamable HTTP）连接：
+## 页面一览
 
-```
-VulnAgent API  ──StreamableHTTP──▶  http://localhost:8080/mcp (blhackbox MCP Gateway)
-```
+| 路由 | 页面 | 说明 |
+|---|---|---|
+| `/dashboard` | 仪表盘 | 真实聚合指标与服务状态 |
+| `/tasks` | 任务中心 | 创建 / 暂停 / 恢复 / 停止 / 重跑 |
+| `/workflow` | 工作流 | 执行拓扑、事实黑板、工具调用 |
+| `/agents` | 智能体工作台 | 会话列表与消息流 |
+| `/attack-surface` | 攻击面分析 | 资产聚合与信息缺口 |
+| `/vulnerabilities` | 漏洞发现 | 候选、独立验证历史、证据链 |
+| `/evidence` | 证据管理 | 原文与完整性校验 |
+| `/reports` | 报告中心 | Markdown / PDF / JSON / ZIP |
+| `/tools` `/mcp` | 工具与 MCP | 目录、连接检测、权限 |
+| `/commands` | 工具执行 | 手动调用记录 |
+| `/intercept` | 拦截规则 | 平台级策略 |
+| `/settings` | 系统设置 | 模型、引擎、日志、预算 |
 
-- 默认只配置 Gateway 统一入口，其余 MCP 服务由网关发现。
-- 未启动时，MCP 管理页会显示真实的「未连接」状态与具体错误原因（不会出现假在线）。
-- 启动 Gateway（在 blhackbox 项目目录中执行，本仓库不会自动执行）：
+---
+
+## 测试
 
 ```bash
-docker compose --profile gateway up -d
+npm run typecheck    # 全仓类型检查（shared + api + web）
+npm run test         # 单元测试（后端 47 个 + 前端 22 个测试文件）
 ```
 
-## 10. 安全约定
+隔离验证脚本（使用临时数据库和本机固定协议，**不访问真实靶机**）：
 
-- 前端**永远**不接收模型 API Key 明文，接口只返回 `sk-a****9f3c` 掩码。
-- API Key 以 AES-256-GCM 加密存入 `system_settings`，主密钥来自环境变量或持久化文件。SQLite 未配置环境主密钥时，首次保存创建 `DB_PATH.key`，并发进程不会覆盖；重启复用。读取旧密文时文件丢失、损坏或主密钥变化会明确失败，不生成替代密钥、不静默回退其他凭据。旧临时主密钥加密的数据无法凭空恢复，须重新填写模型密钥。
-- 数据库备份恢复须配套保管原主密钥（单独受控保存）；仅恢复 SQLite 文件不能恢复解密能力。Unix 创建文件权限为 0600、目录为 0700；Windows 继承目录 ACL，应将目录限制为运行账户可访问。不要将主密钥放入证据包或报告。
-- MCP 请求头全部加密保存为 `mcp_servers.headersEncrypted`，原 headers 明文字段清空。启动在同一事务中升级旧请求头与旧明文模型密钥，并记录不含凭据的审计；已有密文必须先能解密，否则拒绝升级和启动。网关环境请求头仅用于匹配名称与地址的网关，不共享给其他服务；同名既有配置仍以数据库为准。
-- `npm run test:secrets` 使用临时 SQLite、假凭据和本机固定 MCP 协议，验证真实进程重启、并发创建、旧数据原子升级、健康检查/执行器解密、轮换后连接隔离、损坏配置不发请求及传输错误脱敏，不连接外部模型或靶机。
-- `npm run test:http-ws` 验证完整应用的任务 HTTP 和真实 WebSocket 推送；`npm run test:clean-install` 在临时目录从锁文件安装依赖并重复关键运行时验证，不复制用户配置和数据库。当前完整/生产依赖审计均为 0 项，Nest CLI 12 / TypeScript 6 及资源监听修正见 [依赖整改记录](docs/DEPENDENCY_STATUS.md)。
-- `npm run test:process-e2e` 运行真实后端入口子进程，以 HTTP 驱动规划、并行 Worker、MCP、证据、独立复核、分析和报告，再验证完成后重启及执行中断恢复；只使用本机固定协议，不访问靶机。见 [进程联调说明](docs/PROCESS_ACCEPTANCE.md)。
-- 后端不执行任何 docker 命令，不访问 Docker Socket。
-- 所有创建任务必须勾选授权确认；目标 IP 与 CIDR 在前后端双重校验。
-- 审计日志记录任务流转、MCP 检测、权限变更、设置变更，不记录密钥明文。
+```bash
+npm run test:findings          # 漏洞候选、去重、独立验证闭环
+npm run test:goals             # 任务验收与目标判定
+npm run test:runtime           # MCP 超时、取消、连接回收
+npm run test:process-e2e       # 真实后端子进程端到端
+npm run test:migrations        # 迁移与 CLI
+npm run test:secrets           # 密钥加密与轮换
+npm run test:planner-capacity  # 规划批量与队列压缩
+```
 
-## 11. 文档
+完整列表见 `package.json` 的 `scripts` 段。
 
-- [PRD](docs/PRD.md)
-- [架构设计](docs/ARCHITECTURE.md)
-- [数据库设计](docs/DATABASE.md)
-- [API 接口](docs/API.md)
-- [开发计划](docs/DEVELOPMENT_PLAN.md)
+---
 
-资产与规划上下文的隔离验证：`npm run test:surface`。真实靶机测试由用户操作，系统完成前以持续实现记录中的未完成项为准。
+## 安全约定
 
-任务验收与启动链路的隔离验证：`npm run test:goals`。创建任务可选择范围观测、分析与独立复核、指定原文标记；任务详情展示验收进度。修改目标须暂停，新运行和新目标要求新证据。旧任务需明确配置目标后继续。全部测试使用临时数据库和工具替身，靶机实测由用户执行。
+- 模型 API Key 与 MCP 请求头以 **AES-256-GCM** 加密入库，前端永不接收明文
+- 主密钥来自环境变量或持久化文件，丢失或损坏时明确失败，**不静默回退**
+- 后端不执行任何 docker 命令，不访问 Docker Socket
+- 所有任务创建须勾选授权确认；目标 IP / CIDR 前后端双重校验
+- 工具调用受授权范围约束，范围外目标一律阻断
+- 审计日志记录任务流转与配置变更，不记录密钥明文
+- 数据库备份须配套保管原主密钥，仅恢复 SQLite 文件无法恢复解密能力
 
-报告快照与导出的隔离验证：`npm run test:reports`、`npm run test:attachments`。报告中心导出 Markdown / 中文 PDF、完整 JSON / ZIP 证据包及单条证据；保存 MCP 内嵌图片、音频和 resource.blob 的原始字节，报告保留独立副本。外部 URL、filePath 或 resource_link 仅记录引用，不自动读取。单文件 16 MiB、单次调用二进制合计 32 MiB；报告文本快照及二进制副本各最多 32 MiB，PDF 正文 2 MiB / 500 页，超限明确拒绝。已有报告不随原始证据修改或删除改变，损坏副本阻止导出；独立漏洞验证仍需可核验的文本引用。图片预览需要用户点击，模型只收到附件元数据。字体随 API 构建打包，运行无需 Python 或联网取字体。
+---
 
-工具审批已整体移除（全自动执行）：不再产生 `pending_approval` 记录，审批页面、审批接口与重放链路均已删除。模型对任意已注册 MCP 工具可直接调用。`npm run test:approval-recovery` 中覆盖审批面板的部分不再适用，其余执行恢复语义仍有效。完整剩余工作见 [交付检查清单](docs/DELIVERY_CHECKLIST.md)。
+## 文档
 
-任务生命周期：`npm run test:lifecycle` 验证真实任务接口到编排器的暂停/恢复/停止事件、事务回滚和并发操作。重跑保留历史证据/报告，取消旧排队工作、关闭未完成验证、释放意图去重键并更新验收时间边界。删除入口位于任务详情，需输入任务名称；删除全部所属数据和报告附件，保留审计及最小防重建 ID。运行中、在途工作、未收尾审批/会话或待处理事件会阻止删除/重跑。删除需要 SQLite 显式迁移，开发期 synchronize 不能替代约束安装；跨任务附件关联会阻止删除。`npm run test:data-maintenance` 验证手工保留策略、缺失父任务的遗留记录、完整备份、预览失效、清理回滚及分页；系统不自动定时清理。
+| 文档 | 内容 |
+|---|---|
+| [PRD](docs/PRD.md) | 产品需求 |
+| [架构设计](docs/ARCHITECTURE.md) | 模块划分与数据流 |
+| [数据库设计](docs/DATABASE.md) | 表结构与关系 |
+| [API 接口](docs/API.md) | REST 接口约定 |
+| [开发计划](docs/DEVELOPMENT_PLAN.md) | 阶段规划 |
+| [单人使用与靶机验收](docs/USER_ACCEPTANCE.md) | 首次配置与操作 |
+| [执行引擎开关](docs/RUNTIME_CONTROL.md) | 引擎控制边界 |
+| [Worker 并发与默认值](docs/WORKER_CAPACITY.md) | 并发与预算 |
+| [最终交付核验](docs/FINAL_DELIVERY_AUDIT.md) | 逐项交付证据 |
 
-假设与证据：工作流增加假设依据面板，证据页能反查事实、假设和漏洞/验证记录。支持或反驳必须给出明确证据 ID、连续原文和解释；读取时重查任务、目标/端口、调用来源、完整性及当前运行边界，重复文本不增加支持计数，冲突保留待验证。Planner / Worker 使用校验视图和明确 ID 建立研究计划，禁止把全部事实连到每个假设。第六条迁移保留旧关联为 legacy，不自动采信旧计数；新增引用需 `npm run test:hypotheses` 验证。引用存在不能证明语义充分，漏洞确认仍走独立验证。
+---
 
-新报告同时冻结假设关系、解释、原文和生成时校验结果；Markdown / PDF 可离线核查，JSON / ZIP 包含结构化关系。旧报告保持原快照，不随当前假设变化重写。
+## License
 
-运行边界与取消链路验证：`npm run test:runtime`。使用真实 MCP SDK 与仅监听本机的定时器工具检查超时、取消和连接回收，再用隔离数据库检查 Worker 期限与重试。不会连接靶机。已识别端口扫描默认单批 256 地址 / 1024 端口 / 4096 地址×端口×协议组合；`.env.example` 中 MCP_MAX_SCAN_* 可调整。超限时按工具建议和验收缺口拆批，系统不会静默改写参数。每个 Worker 最多 24 次工具请求、连续 3 次失败后停止，整项任务由 Planner 根据已存证据继续规划。
+本项目未附带开源许可证。如需二次分发或商用，请先联系作者。
+
+---
+
+<details>
+<summary><b>附录：实现细节与验收记录</b>（点击展开）</summary>
+
+### 当前阶段范围
+
+| 模块 | 状态 |
+| --- | --- |
+| NestJS 后端 + SQLite（32 张表） | 已接入 14 条显式迁移 |
+| 任务中心（创建/暂停/恢复/停止/重跑） | 已完成 |
+| 仪表盘（真实聚合 + 服务真实状态） | 已完成 |
+| MCP 管理（真实连接检测 + 工具目录） | 已完成 |
+| 工作流（React Flow） | 已接入真实运行记录 |
+| 智能体、攻击面、漏洞、证据、设置 | 已接入业务接口 |
+| 报告中心 | 快照、Markdown / 中文 PDF、JSON / ZIP 证据包 |
+| Orchestrator / Pi Agent 执行引擎 | 代码已接入，靶机实测由用户负责 |
+| MCP Policy Proxy 运行时拦截 | 引擎开关、授权范围与参数校验；工具审批已取消 |
+| 模型 / Worker Token 预算 | 请求前预留、实际结算、未确认占用和本轮/历史账本 |
+
+### 环境变量
+
+| 变量 | 说明 | 默认 |
+| --- | --- | --- |
+| `PORT` | 后端端口 | `3001` |
+| `DB_PATH` | SQLite 文件路径 | `./storage/vulnagent.sqlite` |
+| `VA_ENCRYPTION_KEY` | 密钥加密主密钥（base64，32 字节） | 空 |
+| `VA_API_HOST` | API 监听地址 | `127.0.0.1` |
+| `VA_ENCRYPTION_KEY_FILE` | 持久化主密钥文件 | `DB_PATH.key` |
+| `MCP_GATEWAY_URL` | MCP Gateway 地址 | `http://localhost:8080/mcp` |
+| `MODEL_BASE_URL` / `MODEL_NAME` | OpenAI 兼容模型端点 | `https://api.deepseek.com/v1` |
+| `WORKER_MAX_CONCURRENCY` | Worker 并发上限 | `2` |
+| `MODEL_MAX_CONCURRENCY` | 模型请求并发上限 | `2` |
+| `PI_RUNTIME_ENABLED` | 未保存数据库设置时的执行开关 | `false` |
+
+### 实现笔记
+
+**安装注意**
+
+1. 项目使用 npm workspaces。部分环境的安全策略会拒绝遍历 pnpm 创建的 junction（`os error 448`），因此不建议 pnpm（`pnpm-workspace.yaml` 已保留但非默认）。
+2. `packages/shared` 依赖其 `dist/` 下的 CJS 产物，后端启动前须先构建（`npm run dev:api` 与 `npm run build` 已自动执行）。
+3. 若 `better-sqlite3` 报 `Cannot find module 'bindings'`，执行 `npm install bindings --workspace @vulnagent/api`。
+
+**执行引擎**
+
+引擎默认关闭，须在设置页开启并保存；关闭会暂停运行任务，重新开启后须手动恢复。引擎与任务中心共用持久化控制队列，控制 POST 返回 TaskSummary 表示请求接受，实际快照从 GET 获取。终态任务须先重新运行；暂停、等待输入及停滞使用恢复，保留原预算。详见 [引擎控制说明](docs/ENGINE_CONTROLS.md)。
+
+**日志**
+
+日志级别与文件开关保存后即时生效，文件默认追加到 API 工作目录的 `storage/logs/vulnagent.jsonl`，目录可由 `LOG_DIR` 配置。见 [运行日志说明](docs/LOGGING.md)。
+
+**提示投递**
+
+人工提示可指定当前会话或后续任务规划；定向提示不会被其他 Worker / Planner 读取，实际接收后才消费。见 [提示投递说明](docs/HINT_DELIVERY.md)。
+
+**数据维护**
+
+SQLite 默认关闭自动改表，支持新库建表、匹配旧库接管与迁移前备份，见 [迁移说明](apps/api/src/database/migrations/README.md)。一致性备份、校验、恢复和按数量轮换已提供 CLI，见 [备份恢复说明](docs/BACKUP_RECOVERY.md)。设置页提供手工数据保留与父任务缺失记录维护：先预览、再备份并原子清理，不安装定时任务，见 [数据维护说明](docs/DATA_MAINTENANCE.md)。
+
+**漏洞与验证**
+
+漏洞发现页支持候选、独立验证队列、历史和证据跳转。确认或排除必须经过独立验证，版本匹配不能直接确认漏洞。`npm run test:findings` 验证数据闭环；真实模型与靶机准确率仍待验收。
+
+**假设与证据**
+
+工作流提供假设依据面板，证据页可反查事实、假设和漏洞/验证记录。支持或反驳必须给出明确证据 ID、连续原文和解释；重复文本不增加支持计数，冲突保留待验证。`npm run test:hypotheses` 验证引用规则。
+
+**报告**
+
+Markdown / PDF 可离线核查，JSON / ZIP 包含结构化关系。单文件 16 MiB、单次调用二进制合计 32 MiB；报告文本快照及二进制副本各最多 32 MiB，PDF 正文 2 MiB / 500 页。字体随 API 构建打包，运行无需 Python 或联网取字体。见 `npm run test:reports` / `test:attachments`。
+
+**运行边界**
+
+已识别端口扫描默认单批 256 地址 / 1024 端口 / 4096 地址×端口×协议组合；`.env.example` 中 `MCP_MAX_SCAN_*` 可调整。超限时按工具建议和验收缺口拆批，系统不会静默改写参数。每个 Worker 最多 24 次工具请求、连续 3 次失败后停止，整项任务由 Planner 根据已存证据继续规划。
+
+**任务生命周期**
+
+重跑保留历史证据/报告，取消旧排队工作、关闭未完成验证、释放意图去重键。删除入口位于任务详情，需输入任务名称；删除全部所属数据和报告附件，保留审计及最小防重建 ID。`npm run test:lifecycle` 验证暂停/恢复/停止事件、事务回滚和并发操作。
+
+</details>
