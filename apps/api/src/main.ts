@@ -51,6 +51,12 @@ async function bootstrap(): Promise<void> {
   });
 
   await app.listen(appCfg.port, appCfg.host);
+  // Node 默认 keepAliveTimeout 仅 5 秒：连接空闲后被服务端关闭，
+  // 但反向代理 / 开发代理仍持有该 socket 并尝试复用，表现为 ECONNREFUSED 或空 500。
+  // 拉长到 65 秒（大于常见代理的 60 秒空闲上限），让由代理侧发起关闭。
+  const httpServer = app.getHttpServer() as { keepAliveTimeout?: number; headersTimeout?: number };
+  httpServer.keepAliveTimeout = 65_000;
+  httpServer.headersTimeout = 66_000;
   const host = appCfg.host.includes(':') ? `[${appCfg.host}]` : appCfg.host;
   logger.log(`VulnAgent API 已启动: http://${host}:${appCfg.port}/api`);
   logger.log(`WebSocket: ws://${host}:${appCfg.port}/ws`);
