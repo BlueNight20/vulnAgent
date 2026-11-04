@@ -1,0 +1,10 @@
+const backendRequire = require('./backend-require.cjs');
+const { Server } = backendRequire('@modelcontextprotocol/sdk/server/index.js');
+const { StdioServerTransport } = backendRequire('@modelcontextprotocol/sdk/server/stdio.js');
+const { ListToolsRequestSchema, CallToolRequestSchema, ListResourcesRequestSchema, ListPromptsRequestSchema } = backendRequire('@modelcontextprotocol/sdk/types.js');
+const server = new Server({ name: 'stdio-fixture', version: '1' }, { capabilities: { tools: {}, resources: {}, prompts: {} } });
+server.setRequestHandler(ListToolsRequestSchema, async (req) => ({ tools: [{ name: req.params?.cursor ? 'echo_second' : 'echo', inputSchema: { type: 'object' } }], ...(req.params?.cursor ? {} : { nextCursor: 'page2' }) }));
+server.setRequestHandler(ListResourcesRequestSchema, async () => ({ resources: [{ name: 'fixture-resource', uri: 'fixture://resource' }] }));
+server.setRequestHandler(ListPromptsRequestSchema, async () => ({ prompts: [{ name: 'fixture-prompt', description: 'test prompt' }] }));
+server.setRequestHandler(CallToolRequestSchema, async () => ({ content: [{ type: 'text', text: process.env.MCP_FIXTURE_VALUE ?? 'missing' }] }));
+server.connect(new StdioServerTransport()).catch(() => { process.exitCode = 1; });

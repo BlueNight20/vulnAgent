@@ -1,0 +1,26 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.log
+.npmcache/
+.pnpm-store/
+storage/
+data/
+*.sqlite
+*.sqlite-journal
+*.sqlite.key
+*.sqlite.key.*.tmp
+.DS_Store
+.vscode/
+.idea/
+coverage/
+
+# 本地调试脚本、临时产物与截图，不入库
+tmp/
+*.err
+
+# IDE / 智能助手本地状态
+.codebuddy/
+.current_task

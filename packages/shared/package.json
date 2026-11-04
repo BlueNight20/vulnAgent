@@ -1,0 +1,24 @@
+{
+  "name": "@vulnagent/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "前后端共享的枚举、类型、常量与校验工具",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "require": "./dist/index.js",
+      "default": "./src/index.ts"
+    },
+    "./*.js": {
+      "types": "./src/*.ts",
+      "require": "./dist/*.js",
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "build": "node ../../node_modules/typescript/bin/tsc -p tsconfig.build.json",
+    "typecheck": "node ../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit"
+  }
+}

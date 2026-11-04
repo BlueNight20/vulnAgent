@@ -1,0 +1,74 @@
+{
+  "name": "vulnagent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VulnAgent - 自主渗透测试管理平台（第一阶段：工程骨架与可视化管理台）",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+  },
+  "scripts": {
+    "postinstall": "node scripts/patch-nest-assets.cjs",
+    "dev": "node scripts/dev.mjs",
+    "dev:api": "npm run dev --workspace @vulnagent/api",
+    "dev:web": "npm run dev --workspace @vulnagent/web",
+    "build": "npm run build --workspace @vulnagent/api && npm run build --workspace @vulnagent/web",
+    "typecheck": "npm run typecheck --workspace @vulnagent/shared && npm run typecheck --workspace @vulnagent/api && npm run typecheck --workspace @vulnagent/web",
+    "test": "npm run test --workspace @vulnagent/api && npm run test --workspace @vulnagent/web",
+    "test:execution": "npm run build --workspace @vulnagent/api && node scripts/verify-execution.cjs && node scripts/verify-approval-results.cjs",
+    "test:migrations": "npm run build --workspace @vulnagent/api && node scripts/verify-migrations.cjs",
+    "test:findings": "npm run build --workspace @vulnagent/api && node scripts/verify-findings.cjs",
+    "test:finding-assessments": "npm run build --workspace @vulnagent/api && node scripts/verify-finding-assessments.cjs",
+    "test:profile-permissions": "npm run build --workspace @vulnagent/api && node scripts/verify-profile-permissions.cjs",
+    "test:permission-updates": "npm run build --workspace @vulnagent/api && node scripts/verify-permission-updates.cjs",
+    "test:data-maintenance": "npm run build --workspace @vulnagent/api && node scripts/verify-data-maintenance.cjs",
+    "test:cli-toolchain": "node scripts/verify-cli-toolchain.cjs",
+    "test:runtime-control": "npm run build --workspace @vulnagent/api && node scripts/verify-runtime-control.cjs",
+    "test:engine-controls": "npm run build --workspace @vulnagent/api && node scripts/verify-engine-controls.cjs",
+    "test:logging": "npm run build --workspace @vulnagent/api && node scripts/verify-logging.cjs",
+    "test:worker-capacity": "npm run build --workspace @vulnagent/api && node scripts/verify-worker-capacity.cjs",
+    "test:hints": "npm run build --workspace @vulnagent/api && node scripts/verify-hints.cjs",
+    "test:surface": "npm run build --workspace @vulnagent/api && node scripts/verify-surface.cjs",
+    "test:goals": "npm run build --workspace @vulnagent/api && node scripts/verify-goals.cjs",
+    "test:reports": "npm run build --workspace @vulnagent/api && node scripts/verify-reports.cjs",
+    "test:runtime": "npm run build --workspace @vulnagent/api && node scripts/verify-mcp-runtime.cjs && node scripts/verify-worker-limits.cjs",
+    "test:attachments": "npm run build --workspace @vulnagent/api && node scripts/verify-attachments.cjs",
+    "test:approval-recovery": "npm run build --workspace @vulnagent/api && node scripts/verify-approval-recovery.cjs",
+    "test:lifecycle": "npm run build --workspace @vulnagent/api && node scripts/verify-task-lifecycle.cjs",
+    "test:hypotheses": "npm run build --workspace @vulnagent/api && node scripts/verify-hypotheses.cjs",
+    "test:model-budget": "npm run build --workspace @vulnagent/api && node scripts/verify-model-budget.cjs",
+    "test:secrets": "npm run build --workspace @vulnagent/api && node scripts/verify-secrets.cjs && node scripts/verify-mcp-secrets.cjs",
+    "test:http-ws": "npm run build --workspace @vulnagent/api && node scripts/verify-http-ws.cjs",
+    "test:clean-install": "npm run build --workspace @vulnagent/api && node scripts/verify-clean-install.cjs",
+    "test:backups": "npm run build --workspace @vulnagent/api && node scripts/verify-backups.cjs",
+    "test:process-e2e": "npm run build --workspace @vulnagent/api && node scripts/verify-process-e2e.cjs",
+    "test:mcp:sse": "npm run build --workspace @vulnagent/api && node scripts/verify-mcp-sse.cjs",
+    "test:mcp:stdio": "npm run build --workspace @vulnagent/api && node scripts/verify-mcp-stdio.cjs",
+    "test:mcp:management": "npm run build --workspace @vulnagent/api && node scripts/verify-mcp-management.cjs",
+    "test:planner-capacity": "npm run build --workspace @vulnagent/api && node scripts/verify-planner-capacity.cjs"
+  },
+  "dependencies": {
+    "@nestjs/platform-express": "11.2.8",
+    "@nestjs/websockets": "11.2.8"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
+  },
+  "overrides": {
+    "glob": "14.0.3",
+    "@nestjs/cli": {
+      "minimatch": "11.0.4"
+    },
+    "@nestjs/platform-express": {
+      "multer": "2.5.0"
+    }
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "@nestjs/core@11.2.8": true,
+    "better-sqlite3@12.4.1": true
+  }
+}
